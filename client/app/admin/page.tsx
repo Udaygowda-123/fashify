@@ -62,9 +62,9 @@ export default async function AdminOverviewPage() {
               key={`${alert.productId}-${alert.size}`}
               className="flex items-center justify-between gap-4 border-b border-tool-rule px-4 py-2.5 last:border-0"
             >
-              <span>
-                {alert.name}
-                <span className="text-tool-mist"> — size {alert.size}</span>
+              <span className="flex flex-wrap items-baseline gap-x-3">
+                <span>{alert.name}</span>
+                <span className="text-tool-mist">size {alert.size}</span>
               </span>
               <StockTag stock={alert.remaining} />
             </li>

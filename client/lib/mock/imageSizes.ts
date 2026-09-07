@@ -11,14 +11,13 @@ export interface IntrinsicSize {
 }
 
 export const IMAGE_SIZES = {
-  "auth-panel-01": { width: 1200, height: 1600 },
+  "auth-panel-01": { width: 2400, height: 1350 },
   "collection-knitwear": { width: 1200, height: 1500 },
   "collection-overshirts": { width: 1200, height: 1500 },
   "collection-tees": { width: 1200, height: 1500 },
   "collection-trousers": { width: 1200, height: 1500 },
   "editorial-fabric-01": { width: 1760, height: 1100 },
   "hero-collection-01": { width: 2112, height: 1188 },
-  "hero-collection-02": { width: 2400, height: 1350 },
   "lookbook-01": { width: 2000, height: 860 },
   "lookbook-02": { width: 2000, height: 860 },
   "lookbook-03": { width: 2000, height: 860 },

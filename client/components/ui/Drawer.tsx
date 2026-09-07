@@ -15,6 +15,12 @@ interface DrawerProps {
   children: React.ReactNode;
   /** Rendered against the bottom edge, above the safe area. */
   footer?: React.ReactNode;
+  /**
+   * The admin is a tool and should not wear the shop's chrome: "tool" swaps
+   * the stone ground and the Bodoni title for the flat white surface and
+   * Archivo scale used everywhere else in /admin.
+   */
+  tone?: "shop" | "tool";
 }
 
 const FOCUSABLE = [
@@ -42,6 +48,7 @@ export function Drawer({
   hideTitle = false,
   children,
   footer,
+  tone = "shop",
 }: DrawerProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -119,6 +126,10 @@ export function Drawer({
   if (!isClient) return null;
 
   const closed = side === "right" ? "translate-x-full" : "translate-y-full";
+  const tool = tone === "tool";
+  const surface = tool ? "bg-tool-bg text-tool-ink" : "bg-stone text-ink";
+  const rule = tool ? "border-tool-rule" : "border-rule";
+  const heading = tool ? "text-[0.9375rem]" : "font-display text-d4";
 
   return createPortal(
     <div
@@ -149,21 +160,30 @@ export function Drawer({
         aria-labelledby={open ? titleId : undefined}
         tabIndex={-1}
         className={cx(
-          "absolute flex flex-col bg-stone transition-transform duration-300 ease-out-quiet motion-reduce:transition-none",
+          "absolute flex flex-col transition-transform duration-300 ease-out-quiet motion-reduce:transition-none",
+          surface,
           side === "right"
             ? "inset-y-0 right-0 w-full max-w-[26rem]"
             : "inset-x-0 bottom-0 max-h-[85dvh]",
           open ? "translate-x-0 translate-y-0" : closed,
         )}
       >
-        <header className="flex shrink-0 items-center justify-between gap-4 border-b border-rule px-5 pt-5 pb-4 md:px-6">
-          <h2 id={titleId} className={cx("font-display text-d4", hideTitle && "sr-only")}>
+        <header
+          className={cx(
+            "flex shrink-0 items-center justify-between gap-4 border-b px-5 pt-5 pb-4 md:px-6",
+            rule,
+          )}
+        >
+          <h2 id={titleId} className={cx(heading, hideTitle && "sr-only")}>
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="-mr-2 flex h-11 w-11 items-center justify-center text-meta text-mist hover:text-ink"
+            className={cx(
+              "-mr-2 flex h-11 w-11 items-center justify-center text-meta",
+              tool ? "text-tool-mist hover:text-tool-ink" : "text-mist hover:text-ink",
+            )}
           >
             <span className="sr-only">Close {title.toLowerCase()}</span>
             <svg
@@ -184,7 +204,7 @@ export function Drawer({
         </div>
 
         {footer ? (
-          <div className="safe-b shrink-0 border-t border-rule px-5 pt-5 md:px-6">
+          <div className={cx("safe-b shrink-0 border-t px-5 pt-5 md:px-6", rule)}>
             {footer}
           </div>
         ) : null}

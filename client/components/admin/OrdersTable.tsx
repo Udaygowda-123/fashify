@@ -93,27 +93,28 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
         open={Boolean(order)}
         onClose={() => setOpenId(null)}
         side="right"
+        tone="tool"
         title={order ? `Order ${order.reference}` : "Order"}
       >
         {order ? (
-          <div className="flex flex-col gap-6 text-[0.8125rem] text-ink">
+          <div className="flex flex-col gap-6 text-[0.8125rem]">
             <div className="flex items-center justify-between gap-4">
               <StatusTag status={order.status} />
-              <span className="text-mist">
+              <span className="text-tool-mist">
                 {formatOrderDate(order.placedAt)}
               </span>
             </div>
 
             <div>
-              <h3 className="text-mist">Customer</h3>
+              <h3 className="text-tool-mist">Customer</h3>
               <p className="mt-1">{order.customerName}</p>
-              <p className="text-mist">{order.customerEmail}</p>
-              <p className="text-mist">{order.city}</p>
+              <p className="text-tool-mist">{order.customerEmail}</p>
+              <p className="text-tool-mist">{order.city}</p>
             </div>
 
             <div>
-              <h3 className="text-mist">Pieces</h3>
-              <ul className="mt-2 flex flex-col divide-y divide-rule">
+              <h3 className="text-tool-mist">Pieces</h3>
+              <ul className="mt-2 flex flex-col divide-y divide-tool-rule">
                 {order.lines.map((line) => (
                   <li
                     key={`${line.name}-${line.size}`}
@@ -121,13 +122,13 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                   >
                     <span>
                       <span className="block">{line.name}</span>
-                      <span className="block text-mist">
+                      <span className="block text-tool-mist">
                         Size {line.size}
                       </span>
-                      <span className="block text-mist">
+                      <span className="block text-tool-mist">
                         {line.colourName}
                       </span>
-                      <span className="block text-mist" data-numeric>
+                      <span className="block text-tool-mist" data-numeric>
                         Quantity {line.quantity}
                       </span>
                     </span>
@@ -139,7 +140,7 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
               </ul>
             </div>
 
-            <div className="flex justify-between border-t border-rule pt-4 text-b2">
+            <div className="flex justify-between border-t border-tool-rule pt-4 text-[0.9375rem]">
               <span>Total</span>
               <span data-numeric>{formatPrice(order.total)}</span>
             </div>

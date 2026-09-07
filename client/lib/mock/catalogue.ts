@@ -536,7 +536,7 @@ export const EDITORIAL_IMAGE = img(
 
 export const AUTH_IMAGE = img(
   "auth-panel-01",
-  "A long trench coat caught mid-movement against a plain grey wall",
+  "Someone standing on a rooftop in a pale linen overshirt, lit by flat daylight",
 );
 
 export const EMPTY_RAIL_IMAGE = img(

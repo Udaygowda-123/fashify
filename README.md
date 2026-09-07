@@ -123,7 +123,7 @@ changing. `prefers-reduced-motion` stops all of it.
 
 ## Photographs
 
-The 35 images in `client/public/images/` are from Unsplash, downloaded rather
+The 34 images in `client/public/images/` are from Unsplash, downloaded rather
 than hotlinked, cropped server-side to exact aspect ratios and then put through
 one shared grade — neutral white balance, heavy desaturation, a common
 luminance target and one contrast curve — so that a set shot by many different

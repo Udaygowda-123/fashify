@@ -130,7 +130,7 @@ export function ProductsTable({ rows }: { rows: AdminProductRow[] }) {
                 <span className="block text-[0.75rem] text-tool-mist">
                   {row.colourName}
                   {row.sizesOutOfStock.length > 0
-                    ? ` — sold out in ${row.sizesOutOfStock.join(", ")}`
+                    ? `, sold out in ${row.sizesOutOfStock.join(", ")}`
                     : ""}
                 </span>
               </td>
