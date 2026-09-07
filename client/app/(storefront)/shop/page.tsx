@@ -35,6 +35,9 @@ export default async function ShopPage() {
         </p>
       </header>
 
+      {/* The figure leads here. It is the calmest of the wide frames and the
+          home page cannot use it — it is the hero there — so this is the one
+          screen where it is not a repeat. */}
       <div className="mt-8 md:mt-14">
         <ShopControls
           groups={groups}
@@ -43,7 +46,7 @@ export default async function ShopPage() {
         >
           <ProductGrid
             products={products}
-            lookbook={lookbook}
+            lookbook={[lookbook[1], lookbook[0], lookbook[2]]}
             interruptEvery={7}
             priorityCount={2}
             emptyImage={emptyImage}

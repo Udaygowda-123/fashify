@@ -16,6 +16,16 @@ interface ProductGridProps {
    * server; nothing in Phase 1 can empty the grid.
    */
   emptyImage?: ImageAsset;
+  /**
+   * Let the lookbook photographs run to the edges of the page.
+   *
+   * Only safe when the grid is a direct child of the padded page container,
+   * as it is on the home page. Inside a narrower column — the nine of twelve
+   * the shop grid sits in, beside the filters — the negative margin reaches
+   * into the filter gutter on the left and past the container on the right,
+   * so the row lines up with nothing. Off by default for that reason.
+   */
+  bleed?: boolean;
   className?: string;
 }
 
@@ -90,6 +100,7 @@ export function ProductGrid({
   interruptEvery = 6,
   priorityCount = 0,
   emptyImage,
+  bleed = false,
   className,
 }: ProductGridProps) {
   if (products.length === 0) {
@@ -118,14 +129,18 @@ export function ProductGrid({
           return (
             <div
               key={`look-${slot.image.id}`}
-              className="col-span-full -mx-gutter w-[calc(100%+2*var(--spacing-gutter))] py-4 md:py-8"
+              className={cx(
+                "col-span-full py-4 md:py-8",
+                bleed &&
+                  "-mx-gutter w-[calc(100%+2*var(--spacing-gutter))]",
+              )}
             >
               <Image
                 src={image.src}
                 alt={image.alt}
                 width={image.width}
                 height={image.height}
-                sizes="100vw"
+                sizes={bleed ? "100vw" : "(min-width: 48rem) 75vw, 100vw"}
                 className="h-auto w-full"
               />
             </div>

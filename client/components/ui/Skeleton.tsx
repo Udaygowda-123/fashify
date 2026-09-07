@@ -34,7 +34,7 @@ export function ProductGridSkeleton({ count = 12 }: { count?: number }) {
           return (
             <div
               key={index}
-              className="col-span-full -mx-gutter w-[calc(100%+2*var(--spacing-gutter))] py-4 md:py-8"
+              className="col-span-full py-4 md:py-8"
             >
               <Skeleton className="aspect-[21/9] w-full" />
             </div>

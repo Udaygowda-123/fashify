@@ -499,27 +499,32 @@ export const COLLECTIONS: Collection[] = [
   },
 ];
 
-/** Calmest first — on the home page only the first one is reached. */
+/**
+ * Wide frames that survive a 21:9 crop with clothes still filling them. Both
+ * of the first two are used before the third is reached, so the strongest one
+ * leads. Frames that merely repeat a product tile are deliberately not here —
+ * an interruption that shows the same photograph as the grid is not one.
+ */
 export const LOOKBOOK: LookbookImage[] = [
   {
     id: "l-001",
     image: img(
-      "lookbook-02",
-      "A clothing rail against a plain wall with a potted plant beside it",
+      "lookbook-01",
+      "A rail of pale shirts and trousers hung close together, lit from the side",
     ),
   },
   {
     id: "l-002",
     image: img(
-      "lookbook-03",
-      "Folded knitwear stacked on a white moulded chair",
+      "lookbook-02",
+      "Someone at a white plaster wall in a cream overshirt, seen from behind",
     ),
   },
   {
     id: "l-003",
     image: img(
-      "lookbook-01",
-      "A rail of pale overshirts and knitwear, hung close together",
+      "lookbook-03",
+      "Cotton twill in deep folds, filling the frame",
     ),
   },
 ];

@@ -42,6 +42,7 @@ export default async function HomePage() {
           <ProductGrid
             products={products}
             lookbook={lookbook}
+            bleed
             className="mt-10 md:mt-14"
           />
         </div>
