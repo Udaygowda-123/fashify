@@ -85,10 +85,10 @@ export default async function ProductPage(props: PageProps<"/shop/[slug]">) {
 
       <ProductRail title="Goes with this" products={related} />
 
-      {/* Clearance for the fixed buy bar, at the end of the page where the bar
-          actually covers something — not between the panel and the rail. */}
-      <div className="h-section" />
-      <div className="h-24 md:hidden" />
+      {/* On a phone this is clearance for the fixed buy bar, which sits over
+          the bottom of the page; on a desktop there is no bar and it is just
+          the section rhythm before the footer. */}
+      <div className="h-24 md:h-section" />
     </>
   );
 }
