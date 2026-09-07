@@ -9,9 +9,9 @@ They are not hotlinked. Each was downloaded, cropped server-side by the
 Unsplash CDN to an exact aspect ratio, then put through one shared grade
 (neutral white balance, heavy desaturation, a common luminance target and a
 single contrast curve) so that a set shot by many different photographers reads
-as one shoot. The two lookbook frames were graded a second time, harder,
-because each carried one warm garment that survived the first pass and became
-the only saturated thing on the page.
+as one shoot. Frames whose colour cast survived the grade were replaced rather
+than kept — the lookbook photographs in particular were chosen for surviving a
+21:9 crop with clothes still filling them.
 
 Because the files are graded and re-cropped, they are derivative works and do
 not look like the originals. Each source is listed by its Unsplash photo id;
@@ -22,9 +22,9 @@ append it to `https://images.unsplash.com/` to see the frame it came from.
 | `hero-collection-01.jpg` | `photo-1597329298743-c10a9ddcdd45` |
 | `auth-panel-01.jpg` | `photo-1591357037205-166318b51afd` |
 | `editorial-fabric-01.jpg` | `photo-1518019671582-55004f1bc9ab` |
-| `lookbook-01.jpg` | `photo-1445205170230-053b83016050` |
-| `lookbook-02.jpg` | `photo-1603400521630-9f2de124b33b` |
-| `lookbook-03.jpg` | `photo-1504198458649-3128b932f49e` |
+| `lookbook-01.jpg` | `photo-1660599197052-c610e8a15c9e` |
+| `lookbook-02.jpg` | `photo-1597329298743-c10a9ddcdd45` |
+| `lookbook-03.jpg` | `photo-1769107805465-bfd41863f1a0` |
 | `collection-overshirts.jpg` | `photo-1604506847073-4a8e18e07d92` |
 | `collection-trousers.jpg` | `photo-1718252540511-e958742e4165` |
 | `collection-knitwear.jpg` | `photo-1670080589800-6416c8ce8a14` |

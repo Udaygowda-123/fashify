@@ -510,7 +510,7 @@ export const LOOKBOOK: LookbookImage[] = [
     id: "l-001",
     image: img(
       "lookbook-01",
-      "A rail of pale shirts and trousers hung close together, lit from the side",
+      "Shirts hung evenly along a rail, lit from a window behind them",
     ),
   },
   {
@@ -524,7 +524,7 @@ export const LOOKBOOK: LookbookImage[] = [
     id: "l-003",
     image: img(
       "lookbook-03",
-      "Cotton twill in deep folds, filling the frame",
+      "A rail of pale pieces in a concrete room, a cactus standing beside it",
     ),
   },
 ];
