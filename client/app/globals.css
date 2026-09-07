@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Tokens. Tailwind v4 takes its theme from CSS, so this file is the config.
+
+   On the palette: --ink is a dark green from the same family as --bottle, not
+   a neutral near-black. --mist is darker than a mid grey because the obvious
+   choice (#6E766F) only reaches 3.5:1 on stone and fails AA at body size.
+   --brass never carries text: it is 3.0:1 on stone and 4.2:1 on bottle, so it
+   is used for indicators and rules only.
+--------------------------------------------------------------------------- */
+@theme {
+  --color-stone: #e6e7e2;
+  --color-stone-deep: #dcded8;
+  --color-bottle: #16261e;
+  --color-bottle-deep: #101c16;
+  --color-ink: #14201a;
+  --color-mist: #5a625b;
+  --color-mist-light: #a8afa8;
+  --color-rule: #c9cbc4;
+  --color-brass: #a87c32;
+  /* 6.6:1 on stone, so an error message can actually be read */
+  --color-alert: #8c2f24;
+
+  /* the admin is a tool, not the storefront: its own, flatter surface set */
+  --color-tool-bg: #ffffff;
+  --color-tool-sunk: #f6f6f4;
+  --color-tool-rule: #e3e3e1;
+  --color-tool-ink: #1a1c1a;
+  --color-tool-mist: #6a6f6a;
+  --color-tool-alert: #8c2f24;
+
+  --font-display: var(--font-bodoni), "Times New Roman", Times, serif;
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  /* display — Bodoni Moda, large and confident or not at all */
+  --text-d1: clamp(2.5rem, 8.5vw, 6.5rem);
+  --text-d1--line-height: 0.94;
+  --text-d1--letter-spacing: -0.015em;
+  --text-d2: clamp(1.875rem, 4.5vw, 3.5rem);
+  --text-d2--line-height: 1;
+  --text-d2--letter-spacing: -0.01em;
+  --text-d3: clamp(1.375rem, 2.5vw, 2rem);
+  --text-d3--line-height: 1.1;
+  --text-d4: 1.25rem;
+  --text-d4--line-height: 1.2;
+
+  /* body — Archivo, sized to hold up on prices and sizes */
+  --text-b1: 1.0625rem;
+  --text-b1--line-height: 1.6;
+  --text-b2: 0.9375rem;
+  --text-b2--line-height: 1.55;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.45;
+  --text-micro: 0.75rem;
+  --text-micro--line-height: 1.35;
+
+  --spacing-section: 4rem;
+  --spacing-gutter: 1.25rem;
+
+  --radius-none: 0;
+
+  --ease-out-quiet: cubic-bezier(0.16, 0.84, 0.44, 1);
+}
+
+@media (width >= 48rem) {
+  @theme {
+    --spacing-section: 8rem;
+    --spacing-gutter: 2rem;
+  }
+}
+
+@media (width >= 80rem) {
+  @theme {
+    --spacing-section: 10rem;
+    --spacing-gutter: 4rem;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-stone);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-b2);
+    line-height: 1.55;
+  }
+
+  /* Prices, sizes and admin figures need to align in a column. That is the
+     only thing a monospace face would have been doing here. */
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The accent shows up when you interact with something, and almost nowhere
+     else. Two rings so it reads on stone and on bottle alike. */
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-bottle);
+    color: var(--color-stone);
+  }
+
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
+}
+
+@utility pad-x {
+  padding-inline: var(--spacing-gutter);
+}
+
+/* Fixed elements on notched phones. */
+@utility safe-b {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+@utility safe-t {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+/* ---------------------------------------------------------------------------
+   Motion. One orchestrated sequence, on the hero, on load. Everything else in
+   the site moves only in answer to something the user did.
+--------------------------------------------------------------------------- */
+@keyframes hero-settle {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes hero-scrim {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-line {
+  from {
+    transform: translateY(105%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes skeleton-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.hero-image {
+  animation: hero-settle 1200ms var(--ease-out-quiet) both;
+}
+
+.hero-scrim {
+  animation: hero-scrim 900ms var(--ease-out-quiet) 200ms both;
+}
+
+.hero-line > span {
+  display: block;
+  animation: hero-line 760ms var(--ease-out-quiet) both;
+}
+
+.hero-line-1 > span {
+  animation-delay: 420ms;
+}
+
+.hero-line-2 > span {
+  animation-delay: 520ms;
+}
+
+.hero-tail {
+  animation: hero-fade 700ms linear 900ms both;
+}
+
+.skeleton {
+  background-color: var(--color-stone-deep);
+  animation: skeleton-breathe 1600ms ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
