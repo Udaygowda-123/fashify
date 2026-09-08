@@ -3,6 +3,7 @@ import { Router as createRouter } from "express";
 import mongoose from "mongoose";
 import { features } from "../config/env.js";
 import { getRedis } from "../lib/redis.js";
+import { catalogRouter } from "./catalog/catalog.routes.js";
 
 /**
  * Every route hangs off /api/v1. Modules are registered here so there is one
@@ -31,6 +32,8 @@ export function registerRoutes(app: Express): void {
       features,
     });
   });
+
+  v1.use("/catalog", catalogRouter);
 
   app.use("/api/v1", v1);
 }
