@@ -14,11 +14,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "tsx src/scripts/seed.ts",
-    "reconcile": "tsx src/scripts/reconcile.ts"
+    "reconcile": "tsx src/scripts/reconcile.ts",
+    "grant-admin": "tsx src/scripts/grant-admin.ts"
   },
   "dependencies": {
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.1.0",
+    "cloudinary": "^2.11.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -28,6 +30,7 @@
     "helmet": "^8.0.0",
     "ioredis": "^5.4.2",
     "mongoose": "^8.9.5",
+    "multer": "^2.3.0",
     "nanoid": "^5.0.9",
     "node-cron": "^3.0.3",
     "pino": "^9.6.0",
@@ -42,6 +45,7 @@
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/multer": "^2.2.0",
     "@types/node": "^22.10.7",
     "@types/node-cron": "^3.0.11",
     "@types/react": "^19.2.18",

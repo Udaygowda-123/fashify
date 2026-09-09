@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
 import { ProductsTable } from "@/components/admin/ProductsTable";
-import { getAdminProducts } from "@/lib/mock";
+import { fetchAdminProducts } from "@/lib/api/admin";
+import { useAdminQuery } from "@/lib/api/useAdminQuery";
 
-export const metadata: Metadata = { title: "Products" };
-
-export default async function AdminProductsPage() {
-  const rows = await getAdminProducts();
+export default function AdminProductsPage() {
+  const { data: rows, loading, error } = useAdminQuery(fetchAdminProducts);
 
   return (
     <div className="flex flex-col gap-6">
@@ -14,7 +14,7 @@ export default async function AdminProductsPage() {
         <div>
           <h1 className="text-[1.125rem]">Products</h1>
           <p className="mt-1 text-tool-mist" data-numeric>
-            {rows.length} pieces. Sort by any column.
+            {loading ? "Loading…" : `${rows?.length ?? 0} pieces. Sort by any column.`}
           </p>
         </div>
         <Link
@@ -25,7 +25,13 @@ export default async function AdminProductsPage() {
         </Link>
       </div>
 
-      <ProductsTable rows={rows} />
+      {error ? (
+        <p className="text-tool-alert">{error}</p>
+      ) : loading ? (
+        <p className="text-tool-mist">Loading…</p>
+      ) : (
+        <ProductsTable rows={rows ?? []} />
+      )}
     </div>
   );
 }

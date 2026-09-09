@@ -35,6 +35,29 @@ export interface SizeAvailability {
   inStock: boolean;
 }
 
+/**
+ * One sellable thing: a specific colour in a specific size, with its own
+ * price and its own real stock. This is what the server actually tracks —
+ * Product and Variant are separate collections there for exactly the reason
+ * described in server/src/models/inventory-item.model.ts. Only present once a
+ * product has been fetched by slug (`getProduct`); list views work from the
+ * flattened `colour`/`colours`/`sizes` fields below, which is cheaper for a
+ * grid of thirty tiles that never show a size picker.
+ */
+export interface ProductVariant {
+  id: string;
+  sku: string;
+  size: SizeCode;
+  colour: ColourOption;
+  price: Rupees;
+  compareAtPrice: Rupees | null;
+  /** Real units available right now: onHand minus what carts are holding. */
+  available: number;
+  inStock: boolean;
+  /** Low enough that "only 2 left" is worth saying. */
+  isLow: boolean;
+}
+
 export interface Product {
   id: string;
   slug: string;
@@ -48,7 +71,10 @@ export interface Product {
   images: ImageAsset[];
   /** Landscape crop of the same garment, for wide grid tiles. */
   wideImage?: ImageAsset;
+  /** This colour's size run. For the true per-colour picture, see `variants`. */
   sizes: SizeAvailability[];
+  /** Every size in every colour, with real stock. Set by `getProduct` only. */
+  variants?: ProductVariant[];
   span: TileSpan;
   /** One or two sentences. Plain, specific, no filler. */
   summary: string;
@@ -87,12 +113,22 @@ export interface BagLine {
   image: ImageAsset;
 }
 
+/**
+ * The real state machine from server/src/services/order-status.ts, not the
+ * five-value placeholder Phase 1 used before a server existed to enforce one.
+ */
 export type OrderStatus =
-  | "new"
-  | "packing"
+  | "pending_payment"
+  | "paid"
+  | "payment_failed"
+  | "processing"
   | "shipped"
   | "delivered"
-  | "cancelled";
+  | "return_requested"
+  | "returned"
+  | "rejected"
+  | "cancelled"
+  | "refunded";
 
 export interface OrderLine {
   name: string;

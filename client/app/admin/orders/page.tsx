@@ -1,22 +1,28 @@
-import type { Metadata } from "next";
+"use client";
+
 import { OrdersTable } from "@/components/admin/OrdersTable";
-import { getOrders } from "@/lib/mock";
+import { fetchAdminOrders } from "@/lib/api/admin";
+import { useAdminQuery } from "@/lib/api/useAdminQuery";
 
-export const metadata: Metadata = { title: "Orders" };
-
-export default async function AdminOrdersPage() {
-  const orders = await getOrders();
+export default function AdminOrdersPage() {
+  const { data: orders, loading, error } = useAdminQuery(fetchAdminOrders);
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-[1.125rem]">Orders</h1>
         <p className="mt-1 text-tool-mist" data-numeric>
-          {orders.length} orders. Open one to see what is in it.
+          {loading ? "Loading…" : `${orders?.length ?? 0} orders. Open one to see what is in it.`}
         </p>
       </div>
 
-      <OrdersTable orders={orders} />
+      {error ? (
+        <p className="text-tool-alert">{error}</p>
+      ) : loading ? (
+        <p className="text-tool-mist">Loading…</p>
+      ) : (
+        <OrdersTable orders={orders ?? []} />
+      )}
     </div>
   );
 }

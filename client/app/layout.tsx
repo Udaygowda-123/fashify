@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo, Bodoni_Moda } from "next/font/google";
+import { AuthProvider } from "@/lib/firebase/AuthProvider";
 import "./globals.css";
 
 /**
@@ -37,7 +38,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en-IN"
       className={`${bodoni.variable} ${archivo.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {/* Shared by the storefront and the admin, since both need to know
+            who is signed in and — for the admin — whether they hold the
+            admin claim. */}
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

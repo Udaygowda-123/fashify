@@ -1,7 +1,9 @@
 import { Router } from "express";
+import multer from "multer";
 import { Types } from "mongoose";
 import { z } from "zod";
-import { NotFoundError } from "../../lib/errors.js";
+import { NotFoundError, ValidationError } from "../../lib/errors.js";
+import { uploadProductImage } from "../../lib/cloudinary.js";
 import { requireAdmin, requireAuth } from "../../middleware/auth.js";
 import { input, validate } from "../../middleware/validate.js";
 import { Order, Return } from "../../models/index.js";
@@ -98,6 +100,32 @@ adminRouter.post("/products", validate({ body: createProductBody }), async (req,
   const { body } = input<z.infer<typeof createProductBody>>(res);
   const created = await createProduct(body, req.auth!.userId);
   res.status(201).json(created);
+});
+
+/**
+ * Multer holds the file in memory rather than writing it to disk — the
+ * buffer is handed straight to Cloudinary and then discarded, so nothing is
+ * ever written to this server's filesystem.
+ */
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => {
+    callback(null, file.mimetype.startsWith("image/"));
+  },
+});
+
+/**
+ * A real upload, once CLOUDINARY_URL is configured. Returns the same
+ * {url, alt, width, height} shape `createProductBody.images` expects, so the
+ * admin form can drop the result straight into its image list.
+ */
+adminRouter.post("/uploads", upload.single("file"), async (req, res) => {
+  if (!req.file) {
+    throw new ValidationError("No file was attached.", { fields: { file: "Required." } });
+  }
+  const result = await uploadProductImage(req.file.buffer, req.file.originalname);
+  res.status(201).json(result);
 });
 
 const adjustBody = z.object({

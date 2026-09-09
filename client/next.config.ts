@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
     deviceSizes: [420, 640, 828, 1080, 1400, 1920, 2400],
     imageSizes: [96, 160, 256, 384],
     formats: ["image/webp"],
+    // Product photographs the admin uploads live on Cloudinary, not in
+    // public/images — next/image refuses an external host unless it is
+    // listed here.
+    remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
+    ],
   },
 };
 

@@ -1,257 +1,304 @@
 /**
- * The whole data layer for Phase 1. Every export is an async function
- * returning a typed promise, so in Phase 2 each body becomes a `fetch` against
- * the Express server and no caller changes.
+ * The whole data layer, now backed by the real Express API from server/.
+ * Every export keeps the exact signature it had in Phase 1 — every caller
+ * (pages, components) is unchanged; only what happens inside each function
+ * changed, from reading a local array to calling `fetch`.
  *
- * Set MOCK_LATENCY_MS to see the loading skeletons — they are wired to real
- * suspense boundaries, but with local arrays they resolve too fast to appear:
- *
- *     MOCK_LATENCY_MS=1200 npm run dev
+ * Four functions stay local and always will: getHeroImage, getEditorialImage,
+ * getAuthImage and getEmptyRailImage return page furniture — art direction for
+ * the hero, the editorial block, the auth panel and the empty-bag state — not
+ * commerce data. There is no Product or Collection row for "the photograph
+ * behind the sign-in form", and there should not be one; the server's data
+ * model in server/src/models/ is deliberately silent on it.
  */
+import { apiFetch, toQuery } from "@/lib/api/client";
 import {
   AUTH_IMAGE,
-  COLLECTIONS,
   EDITORIAL_IMAGE,
   EMPTY_RAIL_IMAGE,
   HERO_IMAGE,
   LOOKBOOK,
-  PRODUCTS,
 } from "./catalogue";
-import { ADMIN_FIGURES, ORDERS, STOCK_ALERTS } from "./orders";
 import type {
-  AdminFigure,
-  AdminProductRow,
-  BagLine,
   CategorySlug,
   Collection,
+  ColourOption,
   FilterGroup,
   ImageAsset,
   LookbookImage,
-  Order,
   Product,
+  ProductVariant,
   SortOption,
-  StockAlert,
 } from "./types";
 
-const LATENCY = Number(process.env.MOCK_LATENCY_MS ?? 0);
+const toRupees = (paise: number): number => Math.round(paise / 100);
 
-async function settle<T>(value: T): Promise<T> {
-  if (LATENCY > 0) {
-    await new Promise((resolve) => setTimeout(resolve, LATENCY));
-  }
-  return value;
+function toImage(image: { url: string; alt: string; width: number; height: number }): ImageAsset {
+  return { src: image.url, alt: image.alt, width: image.width, height: image.height };
+}
+
+/** Generic, policy copy — the same on every product, so it lives here rather
+ *  than in the server's per-product data. */
+const DELIVERY =
+  "Free delivery across India, two to four working days. Returns are free for 30 days, unworn and with tags on.";
+
+/* -------------------------------------------------------------------------- */
+/* Catalog list — one shared fetch behind getProducts and getFilterGroups     */
+/* -------------------------------------------------------------------------- */
+
+interface ServerListItem {
+  id: string;
+  slug: string;
+  name: string;
+  summary: string;
+  category: CategorySlug;
+  minPrice: number;
+  compareAtPrice: number | null;
+  images: { url: string; alt: string; width: number; height: number }[];
+  colourCount: number;
+  isSoldOut: boolean;
+}
+
+interface ServerFacetGroup {
+  id: FilterGroup["id"];
+  label: string;
+  options: { value: string; label: string; count: number; hex?: string }[];
+}
+
+interface ServerListResponse {
+  items: ServerListItem[];
+  facets: ServerFacetGroup[];
+  total: number;
+  nextCursor: string | null;
+}
+
+/**
+ * A grid tile only ever reads `colours.length`, never a colour's own name —
+ * see components/product/ProductTile.tsx — so a same-length array of blanks
+ * is a safe stand-in for the real per-colour data the list endpoint does not
+ * send (that would mean joining every variant for every row of a 30-piece
+ * grid, for a number the client already gets as `colourCount`).
+ */
+function blankColours(count: number): ColourOption[] {
+  return Array.from({ length: Math.max(1, count) }, (_, i) => ({
+    slug: `c${i}`,
+    name: "",
+    hex: "#00000000",
+  }));
+}
+
+function toListProduct(item: ServerListItem): Product {
+  const colours = blankColours(item.colourCount);
+  return {
+    id: item.id,
+    slug: item.slug,
+    name: item.name,
+    category: item.category,
+    price: toRupees(item.minPrice),
+    colour: colours[0]!,
+    colours,
+    images: item.images.map(toImage),
+    sizes: [],
+    span: "single",
+    summary: item.summary,
+    composition: "",
+    fitNotes: "",
+    delivery: DELIVERY,
+    isNew: false,
+    goesWith: [],
+  };
+}
+
+/**
+ * Query params match the shape server/src/modules/catalog/catalog.routes.ts
+ * validates. `limit` is capped at 48 there; the seed carries 30 products, so
+ * one page covers the whole catalogue for the demo scale. The server's
+ * cursor pagination is real and ready — the shop UI just does not page
+ * through it yet.
+ */
+async function fetchList(params: {
+  category?: CategorySlug[];
+  limit?: number;
+  sort?: string;
+}): Promise<ServerListResponse> {
+  return apiFetch<ServerListResponse>(
+    `/catalog/products${toQuery({
+      category: params.category,
+      limit: params.limit ?? 48,
+      sort: params.sort ?? "featured",
+    })}`,
+  );
 }
 
 export async function getProducts(): Promise<Product[]> {
-  return settle(PRODUCTS);
+  const data = await fetchList({});
+  return data.items.map(toListProduct);
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
-  return settle(PRODUCTS.find((p) => p.slug === slug) ?? null);
+  try {
+    const detail = await apiFetch<{
+      id: string;
+      slug: string;
+      name: string;
+      summary: string;
+      category: CategorySlug;
+      fabric: string;
+      fitNotes: string;
+      images: { url: string; alt: string; width: number; height: number }[];
+      minPrice: number;
+      variants: {
+        id: string;
+        sku: string;
+        size: string;
+        colour: ColourOption;
+        price: number;
+        compareAtPrice: number | null;
+        available: number;
+        inStock: boolean;
+        isLow: boolean;
+      }[];
+      colours: ColourOption[];
+      goesWith: string[];
+    }>(`/catalog/products/${slug}`);
+
+    const variants: ProductVariant[] = detail.variants.map((v) => ({
+      id: v.id,
+      sku: v.sku,
+      size: v.size as ProductVariant["size"],
+      colour: v.colour,
+      price: toRupees(v.price),
+      compareAtPrice: v.compareAtPrice ? toRupees(v.compareAtPrice) : null,
+      available: v.available,
+      inStock: v.inStock,
+      isLow: v.isLow,
+    }));
+
+    const defaultColour = detail.colours[0] ?? { slug: "", name: "", hex: "#000000" };
+    const sizesForDefault = variants
+      .filter((v) => v.colour.slug === defaultColour.slug)
+      .map((v) => ({ size: v.size, inStock: v.inStock }));
+
+    return {
+      id: detail.id,
+      slug: detail.slug,
+      name: detail.name,
+      category: detail.category,
+      price: toRupees(detail.minPrice),
+      colour: defaultColour,
+      colours: detail.colours,
+      images: detail.images.map(toImage),
+      sizes: sizesForDefault,
+      variants,
+      span: "single",
+      summary: detail.summary,
+      composition: detail.fabric,
+      fitNotes: detail.fitNotes,
+      delivery: DELIVERY,
+      isNew: false,
+      goesWith: detail.goesWith,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function getProductsByCategory(
   category: CategorySlug,
 ): Promise<Product[]> {
-  return settle(PRODUCTS.filter((p) => p.category === category));
+  const data = await fetchList({ category: [category] });
+  return data.items.map(toListProduct);
 }
 
 /** The pieces named on a product, in the order the product names them. */
 export async function getRelatedProducts(slug: string): Promise<Product[]> {
-  const product = PRODUCTS.find((p) => p.slug === slug);
-  if (!product) return settle([]);
-  const related = product.goesWith
-    .map((s) => PRODUCTS.find((p) => p.slug === s))
-    .filter((p): p is Product => Boolean(p));
-  return settle(related);
+  const data = await apiFetch<{ items: ServerListItem[] }>(
+    `/catalog/products/${slug}/related`,
+  );
+  return data.items.map(toListProduct);
 }
 
 export async function getNewArrivals(limit = 8): Promise<Product[]> {
-  const ordered = [...PRODUCTS].sort(
-    (a, b) => Number(b.isNew) - Number(a.isNew),
-  );
-  return settle(ordered.slice(0, limit));
-}
-
-export async function getCollections(): Promise<Collection[]> {
-  return settle(COLLECTIONS);
-}
-
-export async function getLookbook(): Promise<LookbookImage[]> {
-  return settle(LOOKBOOK);
-}
-
-export async function getHeroImage(): Promise<ImageAsset> {
-  return settle(HERO_IMAGE);
-}
-
-export async function getEditorialImage(): Promise<ImageAsset> {
-  return settle(EDITORIAL_IMAGE);
-}
-
-export async function getAuthImage(): Promise<ImageAsset> {
-  return settle(AUTH_IMAGE);
-}
-
-export async function getEmptyRailImage(): Promise<ImageAsset> {
-  return settle(EMPTY_RAIL_IMAGE);
+  const data = await fetchList({ limit, sort: "newest" });
+  return data.items.map(toListProduct);
 }
 
 /**
- * Counts are derived from the catalogue so the filter UI never disagrees with
- * the grid beside it, even though Phase 1 does not filter anything.
+ * Real counts, from the server's `$facet` aggregation over the unfiltered
+ * catalogue — the same request `getProducts()` makes, deduplicated into one
+ * round trip by Next's fetch request memoization since both call `fetchList`
+ * with identical arguments.
  */
 export async function getFilterGroups(): Promise<FilterGroup[]> {
-  const countBy = <T extends string>(pick: (p: Product) => T | T[]) => {
-    const counts = new Map<T, number>();
-    for (const product of PRODUCTS) {
-      const keys = pick(product);
-      for (const key of Array.isArray(keys) ? keys : [keys]) {
-        counts.set(key, (counts.get(key) ?? 0) + 1);
-      }
-    }
-    return counts;
-  };
-
-  const categories = countBy((p) => p.category);
-  const sizes = countBy((p) =>
-    p.sizes.filter((s) => s.inStock).map((s) => s.size),
-  );
-  const colours = countBy((p) => p.colour.slug);
-  const colourNames = new Map(
-    PRODUCTS.map((p) => [p.colour.slug, p.colour] as const),
-  );
-
-  const groups: FilterGroup[] = [
-    {
-      id: "category",
-      label: "Category",
-      options: [...categories].map(([value, count]) => ({
-        value,
-        label: COLLECTIONS.find((c) => c.slug === value)?.title ?? value,
-        count,
-      })),
-    },
-    {
-      id: "size",
-      label: "Size",
-      options: (["XS", "S", "M", "L", "XL", "XXL"] as const)
-        .filter((s) => sizes.has(s))
-        .map((value) => ({
-          value,
-          label: value,
-          count: sizes.get(value) ?? 0,
-        })),
-    },
-    {
-      id: "colour",
-      label: "Colour",
-      options: [...colours].map(([value, count]) => ({
-        value,
-        label: colourNames.get(value)?.name ?? value,
-        count,
-        hex: colourNames.get(value)?.hex,
-      })),
-    },
-    {
-      id: "price",
-      label: "Price",
-      options: [
-        {
-          value: "under-3000",
-          label: "Under ₹3,000",
-          count: PRODUCTS.filter((p) => p.price < 3000).length,
-        },
-        {
-          value: "3000-5000",
-          label: "₹3,000 to ₹5,000",
-          count: PRODUCTS.filter((p) => p.price >= 3000 && p.price < 5000).length,
-        },
-        {
-          value: "5000-7000",
-          label: "₹5,000 to ₹7,000",
-          count: PRODUCTS.filter((p) => p.price >= 5000 && p.price < 7000).length,
-        },
-        {
-          value: "over-7000",
-          label: "Over ₹7,000",
-          count: PRODUCTS.filter((p) => p.price >= 7000).length,
-        },
-      ],
-    },
-  ];
-
-  return settle(groups);
+  const data = await fetchList({});
+  return data.facets;
 }
 
 export async function getSortOptions(): Promise<SortOption[]> {
-  return settle([
+  return [
     { value: "featured", label: "Featured" },
     { value: "newest", label: "Newest first" },
     { value: "price-asc", label: "Price, low to high" },
     { value: "price-desc", label: "Price, high to low" },
-  ]);
+  ];
 }
 
-/** What the bag holds when the page loads, so the drawer has something in it. */
-export async function getInitialBag(): Promise<BagLine[]> {
-  const overshirt = PRODUCTS[0];
-  const trouser = PRODUCTS.find((p) => p.slug === "wide-leg-trouser-slate")!;
-  return settle([
-    {
-      id: "bl-1",
-      productId: overshirt.id,
-      slug: overshirt.slug,
-      name: overshirt.name,
-      price: overshirt.price,
-      size: "M",
-      colourName: overshirt.colour.name,
-      quantity: 1,
-      image: overshirt.images[0],
-    },
-    {
-      id: "bl-2",
-      productId: trouser.id,
-      slug: trouser.slug,
-      name: trouser.name,
-      price: trouser.price,
-      size: "M",
-      colourName: trouser.colour.name,
-      quantity: 1,
-      image: trouser.images[0],
-    },
-  ]);
+/* -------------------------------------------------------------------------- */
+/* Collections                                                                */
+/* -------------------------------------------------------------------------- */
+
+/** One line of editorial copy per category — the server sends the count, not the sell. */
+const COLLECTION_BLURBS: Record<CategorySlug, string> = {
+  overshirts: "The layer that does most of the work.",
+  trousers: "Wide, tapered and straight, in twill and washed linen.",
+  knitwear: "Merino for under things, lambswool and alpaca for over them.",
+  tees: "Two weights, bound necks, cut long enough to stay tucked.",
+};
+
+export async function getCollections(): Promise<Collection[]> {
+  const data = await apiFetch<{
+    items: {
+      slug: CategorySlug;
+      title: string;
+      pieceCount: number;
+      image: { url: string; alt: string; width: number; height: number } | null;
+    }[];
+  }>("/catalog/collections");
+
+  return data.items
+    .filter((row) => row.image)
+    .map((row) => ({
+      id: row.slug,
+      slug: row.slug,
+      title: row.title,
+      blurb: COLLECTION_BLURBS[row.slug],
+      image: toImage(row.image!),
+      pieceCount: row.pieceCount,
+    }));
 }
 
-export async function getOrders(): Promise<Order[]> {
-  return settle(ORDERS);
+/* -------------------------------------------------------------------------- */
+/* Editorial images — page furniture, not commerce data. See the file header. */
+/* -------------------------------------------------------------------------- */
+
+export async function getLookbook(): Promise<LookbookImage[]> {
+  return LOOKBOOK;
 }
 
-export async function getStockAlerts(): Promise<StockAlert[]> {
-  return settle(STOCK_ALERTS);
+export async function getHeroImage(): Promise<ImageAsset> {
+  return HERO_IMAGE;
 }
 
-export async function getAdminFigures(): Promise<AdminFigure[]> {
-  return settle(ADMIN_FIGURES);
+export async function getEditorialImage(): Promise<ImageAsset> {
+  return EDITORIAL_IMAGE;
 }
 
-export async function getAdminProducts(): Promise<AdminProductRow[]> {
-  const rows: AdminProductRow[] = PRODUCTS.map((p) => {
-    const out = p.sizes.filter((s) => !s.inStock);
-    return {
-      id: p.id,
-      slug: p.slug,
-      name: p.name,
-      category: p.category,
-      price: p.price,
-      colourName: p.colour.name,
-      // Deterministic, so the table reads the same on every render.
-      stock: p.sizes.filter((s) => s.inStock).length * 7 + (p.isNew ? 12 : 3),
-      sizesOutOfStock: out.map((s) => s.size),
-      image: p.images[0],
-    };
-  });
-  return settle(rows);
+export async function getAuthImage(): Promise<ImageAsset> {
+  return AUTH_IMAGE;
+}
+
+export async function getEmptyRailImage(): Promise<ImageAsset> {
+  return EMPTY_RAIL_IMAGE;
 }
 
 export * from "./types";

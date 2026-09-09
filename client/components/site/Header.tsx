@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useBag } from "@/components/bag/BagProvider";
 import { Drawer } from "@/components/ui/Drawer";
+import { useAuth } from "@/lib/firebase/AuthProvider";
 import { cx } from "@/lib/format";
 
 const NAV = [
@@ -17,6 +18,7 @@ const NAV = [
 export function Header() {
   const pathname = usePathname();
   const { itemCount, openBag } = useBag();
+  const { user, signOutUser } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -83,12 +85,22 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-1 md:gap-5">
-            <Link
-              href="/sign-in"
-              className="hidden text-meta hover:underline hover:decoration-1 hover:underline-offset-4 md:block"
-            >
-              Sign in
-            </Link>
+            {user ? (
+              <button
+                type="button"
+                onClick={() => void signOutUser()}
+                className="hidden text-meta hover:underline hover:decoration-1 hover:underline-offset-4 md:block"
+              >
+                Sign out
+              </button>
+            ) : (
+              <Link
+                href="/sign-in"
+                className="hidden text-meta hover:underline hover:decoration-1 hover:underline-offset-4 md:block"
+              >
+                Sign in
+              </Link>
+            )}
             <button
               type="button"
               onClick={openBag}
@@ -150,13 +162,26 @@ export function Header() {
           </ul>
         </nav>
         <div className="mt-8 flex flex-col gap-4">
-          <Link
-            href="/sign-in"
-            onClick={() => setMenuOpen(false)}
-            className="text-meta underline decoration-1 underline-offset-4"
-          >
-            Sign in
-          </Link>
+          {user ? (
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                void signOutUser();
+              }}
+              className="self-start text-meta underline decoration-1 underline-offset-4"
+            >
+              Sign out
+            </button>
+          ) : (
+            <Link
+              href="/sign-in"
+              onClick={() => setMenuOpen(false)}
+              className="text-meta underline decoration-1 underline-offset-4"
+            >
+              Sign in
+            </Link>
+          )}
           <Link
             href="/admin"
             onClick={() => setMenuOpen(false)}

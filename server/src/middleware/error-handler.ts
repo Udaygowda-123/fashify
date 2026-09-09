@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from "express";
+import { MulterError } from "multer";
 import mongoose from "mongoose";
 import { ZodError } from "zod";
 import { isProduction } from "../config/env.js";
@@ -39,6 +40,15 @@ function normalise(error: unknown): AppError {
       fields[path] = issue.message;
     }
     return new ValidationError("Some of that could not be saved.", { fields });
+  }
+
+  if (error instanceof MulterError) {
+    return new ValidationError(
+      error.code === "LIMIT_FILE_SIZE"
+        ? "That photograph is too large. Keep it under 8MB."
+        : "That file could not be uploaded.",
+      { fields: { file: error.message } },
+    );
   }
 
   if (error instanceof mongoose.Error.CastError) {

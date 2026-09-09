@@ -6,19 +6,31 @@ import type { OrderStatus } from "@/lib/mock/types";
  * lives in the dot so the label itself stays at full contrast.
  */
 const DOTS: Record<OrderStatus, string> = {
-  new: "bg-brass",
-  packing: "bg-bottle",
+  pending_payment: "bg-brass",
+  paid: "bg-bottle",
+  payment_failed: "bg-tool-alert",
+  processing: "bg-bottle",
   shipped: "bg-bottle",
   delivered: "bg-tool-mist",
+  return_requested: "bg-brass",
+  returned: "bg-tool-mist",
+  rejected: "bg-tool-alert",
   cancelled: "bg-tool-alert",
+  refunded: "bg-tool-mist",
 };
 
 const LABELS: Record<OrderStatus, string> = {
-  new: "New",
-  packing: "Packing",
+  pending_payment: "Awaiting payment",
+  paid: "Paid",
+  payment_failed: "Payment failed",
+  processing: "Packing",
   shipped: "Shipped",
   delivered: "Delivered",
+  return_requested: "Return requested",
+  returned: "Returned",
+  rejected: "Return rejected",
   cancelled: "Cancelled",
+  refunded: "Refunded",
 };
 
 export function StatusTag({ status }: { status: OrderStatus }) {
