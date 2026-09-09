@@ -3,11 +3,17 @@ import { assertProductionReadiness, env, features } from "./config/env.js";
 import { logger } from "./lib/logger.js";
 import { connectMongo, disconnectMongo, supportsTransactions } from "./lib/mongo.js";
 import { disconnectRedis, getRedis } from "./lib/redis.js";
+import { startJobs, stopJobs } from "./jobs/index.js";
+import { syncIndexes } from "./models/index.js";
 
 async function main(): Promise<void> {
   assertProductionReadiness();
 
   await connectMongo();
+  // Built explicitly rather than left to autoIndex: the unique indexes on
+  // idempotencyKey and eventId are what make replays safe, and the first
+  // request after a deploy must not run without them.
+  await syncIndexes();
   // Touch Redis at boot so a bad URL is a startup failure, not a surprise
   // during the first checkout.
   await getRedis().ping();
@@ -29,6 +35,8 @@ async function main(): Promise<void> {
     );
   }
 
+  startJobs();
+
   const app = createApp();
   const server = app.listen(env.PORT, () => {
     logger.info({ port: env.PORT, env: env.NODE_ENV }, "fashify api listening");
@@ -38,6 +46,7 @@ async function main(): Promise<void> {
   const shutdown = async (signal: string) => {
     logger.info({ signal }, "shutting down");
     server.close(async () => {
+      stopJobs();
       await disconnectMongo();
       await disconnectRedis();
       process.exit(0);

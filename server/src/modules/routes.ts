@@ -3,11 +3,14 @@ import { Router as createRouter } from "express";
 import mongoose from "mongoose";
 import { features } from "../config/env.js";
 import { getRedis } from "../lib/redis.js";
+import { accountRouter } from "./account/account.routes.js";
+import { adminRouter } from "./admin/admin.routes.js";
 import { cartRouter } from "./cart/cart.routes.js";
 import { catalogRouter } from "./catalog/catalog.routes.js";
 import { checkoutRouter } from "./checkout/checkout.routes.js";
 import { ordersRouter } from "./orders/orders.routes.js";
 import { webhookRouter } from "./payments/webhook.routes.js";
+import { returnsRouter } from "./returns/returns.routes.js";
 
 /**
  * Every route hangs off /api/v1. Modules are registered here so there is one
@@ -41,6 +44,9 @@ export function registerRoutes(app: Express): void {
   v1.use("/cart", cartRouter);
   v1.use("/checkout", checkoutRouter);
   v1.use("/orders", ordersRouter);
+  v1.use("/returns", returnsRouter);
+  v1.use("/account", accountRouter);
+  v1.use("/admin", adminRouter);
   // Not behind auth or the limiter: the caller is the gateway, and its
   // authenticity comes from the signature over the raw body.
   v1.use("/webhooks", webhookRouter);

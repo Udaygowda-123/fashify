@@ -69,9 +69,15 @@ export const COMMITTED_STATUSES: readonly OrderStatus[] = [
   "returned",
 ];
 
-/** Statuses a shopper is still allowed to cancel from, themselves. */
-export const CUSTOMER_CANCELLABLE: readonly OrderStatus[] = [
-  "pending_payment",
-  "paid",
-  "processing",
-];
+/**
+ * Statuses a shopper is still allowed to cancel from, themselves.
+ *
+ * Deliberately just `pending_payment`: the declared map only allows
+ * `paid -> processing | refunded` and `processing -> shipped | cancelled`, so
+ * once money has moved there is no direct "cancelled" transition out of
+ * `paid` — stopping a paid order means refunding it, not cancelling it. Admin
+ * staff can still move a `processing` order to `cancelled`, which is legal and
+ * goes through the same cancelOrder() path (see order.service.ts); it is just
+ * not something a customer triggers themselves through this list.
+ */
+export const CUSTOMER_CANCELLABLE: readonly OrderStatus[] = ["pending_payment"];
