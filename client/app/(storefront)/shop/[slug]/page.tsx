@@ -6,13 +6,16 @@ import { Gallery } from "@/components/product/Gallery";
 import { ProductPurchase } from "@/components/product/ProductPurchase";
 import { ProductRail } from "@/components/product/ProductRail";
 import { formatPrice } from "@/lib/format";
-import { getProduct, getProducts, getRelatedProducts } from "@/lib/mock";
+import { getProduct, getRelatedProducts } from "@/lib/mock";
 
-export async function generateStaticParams() {
-  const products = await getProducts();
-  return products.map((product) => ({ slug: product.slug }));
-}
-
+/**
+ * No generateStaticParams here on purpose. Stock and price can change at any
+ * moment, so every product page fetches live rather than being pre-rendered
+ * at build time — and a build-time call to the API would also make the
+ * deploy fail whenever the API is not reachable during that step (which is a
+ * real risk: a fresh Vercel build runs before anything else, possibly before
+ * the API has DNS propagated, or during a coincidental API deploy).
+ */
 export async function generateMetadata(
   props: PageProps<"/shop/[slug]">,
 ): Promise<Metadata> {
