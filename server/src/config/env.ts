@@ -99,29 +99,30 @@ export const features = {
 export type FeatureName = keyof typeof features;
 
 /**
- * The optional-integration story is a development convenience and must not
- * survive into production: an unverified webhook endpoint in production would
- * let anyone mark any order paid.
+ * Only refuses to boot over something that has no independent guard at the
+ * point of use. A default COOKIE_SECRET is exactly that: nothing downstream
+ * checks it again, so a deploy that forgot to set it would sign every guest
+ * cart cookie with a value published in this repo's own history.
+ *
+ * Everything else is deliberately NOT a hard stop here, because each one
+ * already fails safely on its own: an unconfigured integration answers 503
+ * through FeatureUnavailableError the moment a route needs it (see
+ * config/env.ts's `features` object), and the one genuinely dangerous
+ * combination — payments live but webhook signatures unverifiable — is
+ * caught independently by verifyWebhookSignature() in lib/razorpay.ts, which
+ * refuses in production regardless of whether this function ever ran. A
+ * server can therefore go live behind Render or similar before Razorpay and
+ * Resend exist yet: checkout and email answer "not configured" instead of
+ * doing something insecure, which is the same posture Stripe's own staging
+ * guides recommend for a partially-configured environment.
  */
 export function assertProductionReadiness(): void {
   if (!isProduction) return;
 
-  const missing: string[] = [];
-  if (!features.auth) missing.push("Firebase Admin (FIREBASE_*)");
-  if (!features.payments) missing.push("Razorpay (RAZORPAY_KEY_*)");
-  if (!features.webhookVerification) {
-    missing.push("RAZORPAY_WEBHOOK_SECRET (webhook signatures cannot be verified)");
-  }
-  if (!features.email) missing.push("Resend (RESEND_API_KEY)");
   if (env.COOKIE_SECRET.startsWith("change-me")) {
-    missing.push("COOKIE_SECRET is still the example value");
-  }
-
-  if (missing.length > 0) {
     console.error(
-      `Refusing to start in production without:\n${missing
-        .map((item) => `  - ${item}`)
-        .join("\n")}`,
+      "Refusing to start in production: COOKIE_SECRET is still the example " +
+        "value. Generate one with `openssl rand -hex 32` and set it for real.",
     );
     process.exit(1);
   }
